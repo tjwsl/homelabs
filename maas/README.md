@@ -7,16 +7,16 @@
 multipass launch --name maas --cloud-init lab.yaml --memory 8G --cpus 4 --disk 20G
 ```
 
-3. Create a MAAS administrator account
+3. Create a MAAS administrator account and import an SSH key if desired
 ```
-sudo maas createadmin --username admin --email tj@woodsidelane.net --ssh-import lp:dotj
+sudo maas createadmin --username admin --email <your_email> --ssh-import lp:<yourLP>
 ```
 
-4. Find the IP of the multipass instance and SSH into it as the `ubuntu` user in order to establish a known SSH host for virt-manager later
+4. Find the IP of the multipass instance and SSH into it as the `ubuntu` user in order to establish a `known_hosts` entry for virt-manager later.
 
-5. Log in to the MAAS WebUI
+5. Log in to the MAAS WebUI using the admin user from step 3.
 
-6. Enable DHCP on 10.10.10.0/24 (should be presented as the untagged VLAN on fabric-0). **Make sure to correct default gateway from .254 to .1.**
+6. Enable DHCP on 10.10.10.0/24 (should be presented as the untagged VLAN on fabric-0). The defaults should be fine, but **make sure to correct the gateway from .254 to .1.**
 The MAAS machine acts as a NAT gateway for the internal bridge.
 
 7. Add a virsh KVM host with the connection string:
@@ -26,7 +26,8 @@ qemu+ssh://ubuntu@<MAAS_MULTIPASS_IP>/system
 
 8. Create a new VM using `virt-manager` on the host itself or `virt-install` inside the MAAS machine
 ```
-virt-install --name testvm --disk pool=default,size=5 --memory 2048 --vcpus 2 --pxe --network bridge=br0 --osinfo ubuntu24.04 --noautoconsole --boot network,hd
+virt-install --name testvm --disk pool=default,size=5 --memory 2048 --vcpus 2 --pxe \
+   --network bridge=br0 --osinfo ubuntu24.04 --noautoconsole --boot network,hd
 ```
 
 # Tests
