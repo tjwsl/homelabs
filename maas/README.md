@@ -1,3 +1,8 @@
+# Purpose
+
+The steps here will deploy a multipass VM running MAAS and libvirt with an isolated internal bridge for use in learning MAAS.  It still requires the user to finish the MAAS setup, as
+that is part of the learning process, but takes care of the network infrastructure to allow focus on learning the MAAS side.
+
 # Getting started
 
 1. Edit `lab.yaml` to pull your own SSH key, using any supported method (ssh_import_id or ssh_authorized_keys)
