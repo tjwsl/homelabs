@@ -1,0 +1,52 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+ssh_import_id:
+  - lp:dotj
+packages:
+  - postgresql
+  - tcpdump
+  - iptraf-ng
+  - command-not-found
+  - bash-completion
+  - iperf
+  - rsync
+  - qemu-system-x86
+  - virtinst
+  - bridge-utils
+  - net-tools
+  - libvirt-daemon-system
+  - iptables-persistent
+snap:
+  commands:
+    00: snap install maas --channel 3.6/stable
+write_files:
+  - path: /etc/netplan/75-maas.yaml
+    permissions: '0600'
+    content: |
+      network:
+        version: 2
+        bridges:
+          br0:
+            dhcp4: false
+            dhcp6: false
+            addresses: [10.10.10.1/24]
+runcmd:
+  - netplan apply
+  - sudo -i -u postgres psql -c "CREATE USER \"maas\" WITH ENCRYPTED PASSWORD 'MAASw0rd.'"
+  - sudo -i -u postgres createdb -O maas maasdb
+  - echo "host maasdb maas 0/0 md5" >> /etc/postgresql/16/main/pg_hba.conf
+  - maas init region+rack --database-uri 'postgres://maas:MAASw0rd.@localhost/maasdb' --maas-url 'http://maas:5240/MAAS'
+  - mkdir -p /var/snap/maas/current/root/.ssh
+  - chmod og=- /var/snap/maas/current/root/.ssh
+  - echo '' | ssh-keygen -t rsa -b 2048 -C MAAShomelab -f /root/.ssh/id_rsa
+  - cp -p /root/.ssh/id_rsa /var/snap/maas/current/root/.ssh/
+  - cat /root/.ssh/id_rsa.pub >> /home/ubuntu/.ssh/authorized_keys
+  - touch /etc/cloud/cloud-init.disabled
+  - export INTERFACE=$(ip -j route show default | jq -r '.[].dev')
+  - sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  - sysctl -p
+  - iptables -t nat -A POSTROUTING -o $INTERFACE -j MASQUERADE
+  - echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+  - echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+
