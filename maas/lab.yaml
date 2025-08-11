@@ -2,7 +2,7 @@
 package_update: true
 package_upgrade: true
 ssh_import_id:
-  - lp:dotj
+  - lp:<my_LP>
 packages:
   - postgresql
   - tcpdump
