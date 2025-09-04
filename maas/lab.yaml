@@ -4,7 +4,6 @@ package_upgrade: true
 ssh_import_id:
   - lp:<my_LP>
 packages:
-  - postgresql
   - tcpdump
   - iptraf-ng
   - command-not-found
@@ -20,6 +19,7 @@ packages:
 snap:
   commands:
     00: snap install maas --channel 3.6/stable
+    01: snap install maas-test-db
 write_files:
   - path: /etc/netplan/75-maas.yaml
     permissions: '0600'
@@ -33,10 +33,7 @@ write_files:
             addresses: [10.10.10.1/24]
 runcmd:
   - netplan apply
-  - sudo -i -u postgres psql -c "CREATE USER \"maas\" WITH ENCRYPTED PASSWORD 'MAASw0rd.'"
-  - sudo -i -u postgres createdb -O maas maasdb
-  - echo "host maasdb maas 0/0 md5" >> /etc/postgresql/16/main/pg_hba.conf
-  - maas init region+rack --database-uri 'postgres://maas:MAASw0rd.@localhost/maasdb' --maas-url 'http://maas:5240/MAAS'
+  - maas init region+rack --database-uri 'maas-test-db:///' --maas-url 'http://maas:5240/MAAS'
   - mkdir -p /var/snap/maas/current/root/.ssh
   - chmod og=- /var/snap/maas/current/root/.ssh
   - echo '' | ssh-keygen -t rsa -b 2048 -C MAAShomelab -f /root/.ssh/id_rsa
